@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 160" fill="none">
+  <defs>
+    <linearGradient id="cloud" x1="180" y1="18" x2="180" y2="145" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff"/>
+      <stop offset=".62" stop-color="#f8fcff"/>
+      <stop offset="1" stop-color="#dceefa" stop-opacity=".85"/>
+    </linearGradient>
+  </defs>
+  <path d="M65 138C38 138 18 121 18 99C18 77 36 61 58 60C66 32 88 18 113 18C146 18 169 38 174 65C184 43 202 33 223 35C248 37 264 55 266 78C279 70 292 70 305 75C326 78 342 93 342 111C342 128 325 138 302 138Z" fill="url(#cloud)"/>
+</svg>

@@ -1,0 +1,271 @@
+/* Краска и стикеры повторяют палитру пользовательского рисунка. */
+.brand-mark {
+  object-fit: cover;
+  border-radius: 12px;
+  filter: drop-shadow(0 3px 0 var(--paint-outline));
+  transition: transform 240ms var(--motion-spring);
+}
+
+.brand > span {
+  font-family: var(--font-graffiti);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.hero {
+  padding-block: 0;
+  margin-bottom: 12px;
+}
+
+.hero .graffiti-title {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0 0.3em;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 10px 24px 14px;
+  font-family: var(--font-graffiti);
+  font-size: clamp(32px, 4.5vw, 52px);
+  font-weight: 400;
+  line-height: 1.22;
+  letter-spacing: 0;
+  transform: rotate(-2deg);
+}
+
+.graffiti-title::before,
+.graffiti-title::after {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.graffiti-title::before {
+  inset: 4% -1% 0;
+  background: var(--paint-outline);
+  clip-path: polygon(2% 23%, 12% 17%, 10% 5%, 32% 13%, 45% 0, 56% 11%, 74% 4%, 81% 14%, 97% 9%, 94% 29%, 100% 42%, 96% 67%, 99% 85%, 82% 82%, 73% 99%, 56% 88%, 39% 100%, 25% 88%, 7% 98%, 9% 79%, 0 70%, 5% 48%);
+}
+
+.graffiti-title::after {
+  inset: -9px -28px -10px;
+  z-index: -3;
+  background:
+    radial-gradient(circle at 5% 43%, var(--paint-blue) 0 9px, transparent 10px),
+    radial-gradient(circle at 91% 15%, var(--paint-yellow) 0 8px, transparent 9px),
+    radial-gradient(circle at 96% 70%, var(--paint-blue) 0 13px, transparent 14px),
+    radial-gradient(circle at 15% 82%, var(--paint-yellow) 0 5px, transparent 6px),
+    radial-gradient(ellipse at center, rgb(55 198 244 / 0.2), transparent 68%);
+}
+
+.graffiti-title-word {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  color: var(--paint-yellow);
+  background: linear-gradient(175deg, #fffba0 8%, var(--paint-yellow) 42%, #ffba15 65%, #ff7017 88%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 2px #fffbe9;
+  paint-order: stroke fill;
+  filter: drop-shadow(1px 3px 0 #071c34);
+}
+
+.graffiti-title-word--blue {
+  background-image: linear-gradient(170deg, #e0fbff 5%, #7de6ff 40%, var(--paint-blue) 66%, #2099ef 92%);
+  transform: rotate(3deg) translateY(3px);
+}
+
+.hero p {
+  max-width: 760px;
+  margin-top: 10px;
+  font-family: var(--font-hand);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.home h2,
+.deck-card-text > strong,
+.import-option-label,
+.app-nav-link,
+.primary-button,
+.secondary-button,
+.text-button,
+.link-button,
+.back-link {
+  font-family: var(--font-hand);
+}
+
+.home h2 { font-weight: 750; letter-spacing: -0.035em; }
+.deck-card-text > strong { font-size: 17px; font-weight: 700; }
+.home .import-panel { border-top: 3px solid color-mix(in srgb, var(--paint-blue) 60%, var(--glass-edge)); }
+.dropzone { transition: border-color var(--ease), background var(--ease), box-shadow var(--ease); }
+.dropzone:focus-within { border-color: var(--sky); background: var(--sky-wash); }
+.dropzone-icon { rotate: -7deg; transition: rotate 240ms var(--motion-spring), transform var(--ease); }
+
+.cta-button.spray-button {
+  position: relative;
+  gap: 12px;
+  min-height: 58px;
+  padding: 4px 25px 4px 16px;
+  border: 2px solid var(--paint-outline);
+  border-radius: 18px 23px 17px 22px;
+  background: linear-gradient(165deg, #fff276, #ffcf36 55%, #ff9e24);
+  color: #102d50;
+  font-family: var(--font-hand);
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 5px 0 var(--paint-outline);
+  transform: rotate(-1deg);
+}
+
+.cta-button.spray-button:disabled {
+  background: var(--surface-sunken);
+  border-color: var(--line-strong);
+  color: var(--muted);
+  box-shadow: 0 3px 0 var(--line);
+  transform: none;
+}
+
+.spray-widget { position: relative; display: block; flex: none; width: 37px; height: 43px; }
+.spray-widget-can {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  mask: url('/branding/spray-can-mask.png') center / 155% auto no-repeat luminance;
+  transform: rotate(-12deg);
+  transform-origin: 60% 80%;
+  transition: transform 260ms var(--motion-spring);
+}
+.spray-widget-mist {
+  position: absolute;
+  top: -5px;
+  left: -27px;
+  width: 36px;
+  height: 25px;
+  opacity: 0;
+  background: radial-gradient(circle at 70% 50%, currentColor 0 2px, transparent 3px),
+    radial-gradient(circle at 30% 20%, currentColor 0 2px, transparent 3px),
+    radial-gradient(circle at 20% 78%, currentColor 0 3px, transparent 4px),
+    radial-gradient(circle at 4% 40%, currentColor 0 1px, transparent 2px);
+  transform: translateX(10px) scale(0.4);
+}
+
+.spray-widget.is-busy .spray-widget-can { animation: spray-shake 550ms ease-in-out infinite alternate; }
+
+@media (hover: hover) and (pointer: fine) {
+  .brand:hover .brand-mark { transform: rotate(-9deg) scale(1.08); }
+  .app-nav-link:hover svg { rotate: -15deg; }
+  .app-nav-link svg { transition: rotate var(--ease); }
+  .dropzone:hover { border-color: var(--sky); background: var(--sky-wash); }
+  .dropzone:hover .dropzone-icon { rotate: 5deg; transform: translateY(-3px); }
+  .cta-button.spray-button:hover:not(:disabled) {
+    background: linear-gradient(165deg, #fff6a0, #ffdc4a 55%, #ffad32);
+    color: #102d50;
+    transform: translateY(-3px) rotate(1deg);
+    box-shadow: 0 8px 0 var(--paint-outline);
+  }
+  .spray-button:hover:not(:disabled) .spray-widget-can { transform: rotate(-26deg) translateY(-2px); }
+  .spray-button:hover:not(:disabled) .spray-widget-mist { animation: spray-puff 650ms ease-out both; }
+  .generation-task:hover .spray-widget-mist { animation: spray-puff 650ms ease-out both; }
+  .deck-card:hover { transform: translateY(-5px) rotate(-0.6deg); border-color: var(--sky); box-shadow: 4px 7px 0 color-mix(in srgb, var(--sky) 25%, transparent); }
+  .deck-card:nth-child(even):hover { rotate: 1.2deg; }
+  .deck-card-icon { transition: rotate 260ms var(--motion-spring), background var(--ease); }
+  .deck-card:hover .deck-card-icon { rotate: -12deg; background: var(--accent-wash-strong); }
+  .run-button svg { transition: transform var(--ease); }
+  .run-button:hover:not(:disabled) svg { transform: translateX(3px); }
+  .link-button { transition: color var(--ease), text-decoration-thickness var(--ease), text-underline-offset var(--ease); }
+  .link-button:hover { text-decoration-thickness: 3px; text-underline-offset: 5px; }
+  .icon-button:hover:not(:disabled) { transform: rotate(-7deg); }
+}
+
+.cta-button.spray-button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 var(--paint-outline); }
+.spray-button:focus-visible .spray-widget-can { transform: rotate(-24deg); }
+
+/* Строка импорта всегда в одну линию: когда места мало, подписи прячутся (остаются для
+   скринридера), а настройки и кнопка сжимаются до виджетов. Пороги — по ширине самой строки. */
+.import-actions { container: import-actions / inline-size; flex-wrap: nowrap; }
+.import-actions .import-options { flex: 1 1 auto; flex-wrap: nowrap; min-width: 0; }
+.import-actions .import-option { flex: 0 1 auto; min-width: 0; }
+.import-actions .import-option-text { min-width: 0; }
+.import-actions .segmented-tabs { flex: none; }
+.import-actions .learner-toggle { flex: 0 1 auto; min-width: 0; }
+.import-actions > .cta-button { flex: none; }
+
+@container import-actions (max-width: 940px) {
+  .import-option > .import-option-text small { display: none; }
+}
+@container import-actions (max-width: 860px) {
+  .cta-button.spray-button { padding: 4px 13px; }
+  .cta-button.spray-button > span:not(.spray-widget) {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; white-space: nowrap; clip-path: inset(50%);
+  }
+}
+@container import-actions (max-width: 700px) {
+  .import-actions .learner-toggle { flex: none; min-height: 48px; }
+  .learner-toggle .import-option-text {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; white-space: nowrap; clip-path: inset(50%);
+  }
+}
+@container import-actions (max-width: 540px) {
+  .import-actions, .import-actions .import-options { gap: 10px; }
+  .import-option > .import-option-text {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; white-space: nowrap; clip-path: inset(50%);
+  }
+  .import-actions .import-option, .import-actions .segmented-tabs { flex: 1 1 auto; }
+  .import-actions .segmented-tabs button { padding-inline: 6px; }
+}
+@container import-actions (max-width: 340px) {
+  .learner-toggle-chevron { display: none; }
+}
+
+@keyframes spray-puff {
+  35% { opacity: 0.65; }
+  to { opacity: 0; transform: translateX(-13px) scale(1.2); }
+}
+@keyframes spray-shake { to { transform: rotate(8deg) translateY(-2px); } }
+
+@media (max-width: 640px) {
+  .app-topbar { gap: 8px; padding-inline: 12px; }
+  .brand { gap: 7px; font-size: 16px; }
+  .brand-mark { width: 35px; height: 35px; border-radius: 10px; }
+  .app-nav { gap: 0; }
+  .app-nav-link { gap: 5px; padding-inline: 7px; font-size: 13px; }
+  .app-main { padding-inline: 16px; }
+  .hero { margin-bottom: 12px; }
+  .hero .graffiti-title { gap: 0; padding: 8px 16px 12px; font-size: clamp(28px, 7.2vw, 44px); }
+  .graffiti-title::after { inset-inline: -10px; }
+  .graffiti-title-word--blue { margin-inline: 10px; }
+  .hero p { font-size: 15px; }
+  .dropzone { gap: 6px; padding: 12px; }
+  .dropzone h2 { font-size: 19px; }
+  .dropzone-hint { font-size: var(--text-sm); }
+  .home .import-panel { padding: 12px; }
+  .section-head { align-items: start; gap: 10px; }
+  .section-head-actions { flex-wrap: wrap; justify-content: end; }
+  .section-head-actions .text-button { padding-inline: 5px; font-size: 12px; }
+}
+
+@media (min-width: 1024px) and (max-height: 800px) {
+  .home .hero .graffiti-title { padding-block: 8px 12px; font-size: 44px; }
+  .home .import-panel { padding: 12px; }
+  .home .dropzone { gap: 6px; padding: 10px 16px; }
+  .home .decks-section { margin-top: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand:hover .brand-mark, .deck-card:hover, .deck-card:nth-child(even):hover,
+  .cta-button.spray-button:hover:not(:disabled), .icon-button:hover:not(:disabled) { transform: none; rotate: none; }
+  .spray-button .spray-widget-mist { display: none; }
+  .generation-task .spray-widget-mist { display: none; }
+  .spray-widget.is-busy .spray-widget-can { animation: none; }
+}
+
+@media (max-width: 360px) {
+  .brand { font-size: 13px; gap: 5px; }
+  .app-nav-link { font-size: 12px; padding-inline: 5px; }
+}

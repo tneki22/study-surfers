@@ -1,0 +1,154 @@
+/*
+ * Единственное место, где задаются цвет, размер, ритм и движение.
+ * Компоненты и экраны берут только отсюда: `var(--accent)`, а не `#d63f22`.
+ *
+ * Структура и имена — из Tentex (обе темы через light-dark(), тему переключает
+ * data-theme на <html>), палитра своя: игровая. Тёплый коралловый акцент —
+ * «жми сюда», небесный голубой — мир игры. Красный и зелёный оставлены только
+ * для обратной связи «верно / неверно», поэтому цвета треков их избегают.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* --- Поверхности. Снизу вверх: фон → карточка → приподнятое --- */
+  --canvas: light-dark(#eef4fb, #0c1120);
+  --paper: light-dark(#ffffff, #141b2e);
+  --paper-strong: light-dark(#ffffff, #1b2440);
+  --surface-hover: light-dark(#e8eef7, #212b4a);
+  --surface-sunken: light-dark(#eaf0f7, #0f1528);
+  /* Стекло поверх 3D-сцены: карточки ответов, HUD, меню паузы */
+  --glass: light-dark(rgb(255 255 255 / 0.72), rgb(16 22 40 / 0.68));
+  --glass-strong: light-dark(rgb(255 255 255 / 0.9), rgb(16 22 40 / 0.86));
+  --glass-edge: light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.14));
+
+  /* --- Текст. Четыре ступени: чем ниже, тем тише --- */
+  --ink: light-dark(#14203a, #eaf0fb);
+  --ink-soft: light-dark(#3a4866, #b9c4dc);
+  --muted: light-dark(#5b6883, #8b97b3);
+  --faint: light-dark(#8691a8, #5f6a86);
+
+  /* --- Линии --- */
+  --line: light-dark(#dde5f0, #253052);
+  --line-strong: light-dark(#c3cede, #36426a);
+
+  /* --- Акцент: коралл. Белый текст на нём держит 4.5:1 --- */
+  --accent: light-dark(#d63f22, #ff8a5c);
+  --accent-hover: light-dark(#bd3519, #ffa07a);
+  --accent-active: light-dark(#a02c13, #ffb595);
+  --on-accent: light-dark(#ffffff, #1d0b05);
+
+  /* --- Небо: второй цвет мира, для ссылок на «игровое» и подсветок --- */
+  --sky: light-dark(#1d7fd1, #5cb8ff);
+  --sky-wash: color-mix(in srgb, var(--sky) 12%, transparent);
+
+  /* --- Тона состояний --- */
+  --tone-success: light-dark(#1f8a3e, #4fd67a);
+  --tone-warning: light-dark(#9a6408, #f2b640);
+  --tone-danger: light-dark(#c7283a, #ff7b8a);
+  --tone-info: light-dark(#0b6e8d, #4cc5e8);
+  --on-danger: light-dark(#ffffff, #1a0d10);
+  --done: var(--tone-success);
+
+  /* --- Цвета треков. Без красного и зелёного: те заняты под «верно/неверно» --- */
+  --lane-1: #2b9bf0;
+  --lane-2: #f5a623;
+  --lane-3: #8b5cf6;
+  --lane-4: #ec4899;
+
+  --tooltip-surface: light-dark(#1a2440, #eaf0fb);
+  --tooltip-ink: light-dark(#f3f6fb, #14203a);
+
+  /* --- Производные от акцента --- */
+  --accent-wash: color-mix(in srgb, var(--accent) 10%, transparent);
+  --accent-wash-strong: color-mix(in srgb, var(--accent) 18%, transparent);
+  --accent-edge: color-mix(in srgb, var(--accent) 40%, transparent);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 32%, transparent);
+
+  /* --- Тени --- */
+  --shadow-tint-sm: light-dark(rgb(20 32 58 / 0.08), rgb(0 0 0 / 0.45));
+  --shadow-tint-md: light-dark(rgb(20 32 58 / 0.12), rgb(0 0 0 / 0.55));
+  --shadow-tint-lg: light-dark(rgb(20 32 58 / 0.18), rgb(0 0 0 / 0.65));
+  --shadow-sm: 0 1px 2px var(--shadow-tint-sm);
+  --shadow-md: 0 6px 18px var(--shadow-tint-md);
+  --shadow-lg: 0 20px 50px var(--shadow-tint-lg);
+  --shadow-accent: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent);
+
+  /* --- Скругления: крупнее, чем в Tentex — игра, а не таблицы --- */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
+  --radius-pill: 999px;
+
+  /* --- Шаг сетки: 4px --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* --- Кегль --- */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-md: 16px;
+  --text-lg: 19px;
+  --text-xl: 23px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --text-4xl: 48px;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.4;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.75;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* --- Движение --- */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 320ms;
+  --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease: var(--motion-base) var(--motion-ease);
+  --ease-fast: var(--motion-fast) var(--motion-ease);
+
+  /* --- Слои --- */
+  --z-hud: 5;
+  --z-topbar: 10;
+  --z-popover: 40;
+  --z-overlay: 50;
+  --z-dialog: 60;
+
+  /* --- Шрифты. Onest — текст, Unbounded — заголовки, счёт и HUD;
+         оба нарисованы сразу с кириллицей --- */
+  --font-sans: "Onest Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Unbounded Variable", "Onest Variable", system-ui, sans-serif;
+  --font-graffiti: "Rubik Wet Paint", "Unbounded Variable", sans-serif;
+  --font-hand: "Shantell Sans Variable", "Onest Variable", sans-serif;
+  --paint-yellow: #ffe63f;
+  --paint-orange: #ff881c;
+  --paint-blue: #37c6f4;
+  --paint-outline: #103560;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}

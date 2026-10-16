@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Фирменные шрифты логотипа, заголовка и надписей загружаются до React. -->
+    <link rel="preload" href="/node_modules/@fontsource/rubik-wet-paint/files/rubik-wet-paint-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/node_modules/@fontsource/rubik-wet-paint/files/rubik-wet-paint-cyrillic-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/node_modules/@fontsource-variable/shantell-sans/files/shantell-sans-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/node_modules/@fontsource-variable/shantell-sans/files/shantell-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="icon" type="image/png" sizes="32x32" href="%BASE_URL%branding/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="%BASE_URL%branding/icon-192.png" />
+    <link rel="apple-touch-icon" href="%BASE_URL%branding/icon-192.png" />
+    <meta name="theme-color" content="#103560" />
+    <title>Study Surfers</title>
+    <script>
+      // Тему ставим до первой отрисовки, иначе при перезагрузке моргает светлым.
+      (function () {
+        try {
+          var stored = localStorage.getItem("ss:theme");
+          if (stored === "light" || stored === "dark") document.documentElement.dataset.theme = stored;
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

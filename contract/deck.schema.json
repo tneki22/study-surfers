@@ -1,0 +1,235 @@
+{
+  "$defs": {
+    "Distractor": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "far",
+            "near"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "why_wrong": {
+          "title": "Why Wrong",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "kind",
+        "why_wrong"
+      ],
+      "title": "Distractor",
+      "type": "object"
+    },
+    "FileHeader": {
+      "properties": {
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "language": {
+          "default": "ru",
+          "title": "Language",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "title": "FileHeader",
+      "type": "object"
+    },
+    "FileItem": {
+      "properties": {
+        "uid": {
+          "title": "Uid",
+          "type": "string"
+        },
+        "question_uid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Question Uid"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "correct": {
+          "title": "Correct",
+          "type": "string"
+        },
+        "distractors": {
+          "items": {
+            "$ref": "#/$defs/Distractor"
+          },
+          "title": "Distractors",
+          "type": "array"
+        },
+        "explanation": {
+          "title": "Explanation",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "user_docs",
+            "ai_knowledge",
+            "tentex_card",
+            "flashcard"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "evidence_quote": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Quote"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "uid",
+        "prompt",
+        "correct",
+        "distractors",
+        "explanation",
+        "source"
+      ],
+      "title": "FileItem",
+      "type": "object"
+    },
+    "FileQuestion": {
+      "properties": {
+        "uid": {
+          "title": "Uid",
+          "type": "string"
+        },
+        "ordinal": {
+          "minimum": 1,
+          "title": "Ordinal",
+          "type": "integer"
+        },
+        "number_label": {
+          "title": "Number Label",
+          "type": "string"
+        },
+        "section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Section"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "answer_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Answer Text"
+        }
+      },
+      "required": [
+        "uid",
+        "ordinal",
+        "number_label",
+        "text"
+      ],
+      "title": "FileQuestion",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "study-surfers-deck",
+      "title": "Format",
+      "type": "string"
+    },
+    "version": {
+      "const": 1,
+      "title": "Version",
+      "type": "integer"
+    },
+    "exported_at": {
+      "format": "date-time",
+      "title": "Exported At",
+      "type": "string"
+    },
+    "app_version": {
+      "title": "App Version",
+      "type": "string"
+    },
+    "deck": {
+      "$ref": "#/$defs/FileHeader"
+    },
+    "questions": {
+      "items": {
+        "$ref": "#/$defs/FileQuestion"
+      },
+      "title": "Questions",
+      "type": "array"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/FileItem"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "exported_at",
+    "app_version",
+    "deck",
+    "questions",
+    "items"
+  ],
+  "title": "DeckFile",
+  "type": "object"
+}

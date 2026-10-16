@@ -1,0 +1,27 @@
+.subscription-panel > .screen-hint { margin: 0 0 1.1rem; }
+.subscription-panel > .section-head { flex-wrap: wrap; }
+.ai-connections > .section-head { flex-wrap: wrap; }
+.ai-connections .section-head-actions { flex-wrap: wrap; min-width: 0; }
+.ai-connections .provider-title { min-width: 0; }
+.subscription-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.subscription-client { padding: 1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-sunken); min-width: 0; }
+.subscription-client-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .6rem; flex-wrap: wrap; }
+.subscription-client-head small { display: block; margin-top: .25rem; opacity: .65; font-size: .78rem; }
+.subscription-client > p, .subscription-login p { font-size: .85rem; line-height: 1.55; opacity: .8; }
+.subscription-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+.subscription-link { display: inline-flex; gap: .4rem; align-items: center; padding: .5rem 0; font-size: .85rem; color: inherit; text-underline-offset: 3px; }
+.subscription-login { border-top: 1px solid var(--line); margin-top: .8rem; }
+.subscription-code { display: grid; gap: .5rem; margin: .6rem 0; }
+.subscription-code input { width: 100%; min-width: 0; }
+.subscription-code label, .subscription-code small { font-size: .8rem; }
+.subscription-notice { display: flex; gap: .6rem; align-items: flex-start; font-size: .85rem; line-height: 1.5; }
+.subscription-notice svg { flex-shrink: 0; margin-top: .15rem; }
+.subscription-panel > .disclosure { margin-top: 1rem; }
+.subscription-panel .disclosure p { font-size: .85rem; line-height: 1.6; }
+.ai-quick-setup .subscription-list { grid-template-columns: 1fr; }
+@media (max-width: 650px) {
+  .subscription-list { grid-template-columns: 1fr; }
+  .ai-connections .model-row { flex-wrap: wrap; }
+  .ai-connections .model-name { flex-basis: calc(100% - 52px); }
+  .ai-connections .section-head-actions button { white-space: normal; }
+}

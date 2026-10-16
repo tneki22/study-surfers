@@ -1,0 +1,40 @@
+# Данные и секреты
+/data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+installation.secret
+.env
+.env.*
+!frontend/.env.mock
+
+# Скачанные архивы ассетов (оптимизированные лежат в frontend/public/models)
+/assets-src/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv-build/
+/build/
+/release/
+/desktop/resources/icon.ico
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+test-results/
+playwright-report/
+/frontend/.playwright-cli/
+/output/playwright/
+/output/*.playwright.js
+/output/desktop-*
+
+# Редакторы и ОС
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

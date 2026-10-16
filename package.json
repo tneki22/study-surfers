@@ -1,0 +1,51 @@
+{
+  "name": "study-surfers",
+  "productName": "Study Surfers",
+  "version": "0.1.0",
+  "description": "3D-раннер для повторения к экзамену",
+  "author": "Study Surfers",
+  "private": true,
+  "main": "desktop/main.cjs",
+  "engines": { "node": ">=24 <25" },
+  "scripts": {
+    "postinstall": "node node_modules/electron/install.js",
+    "build:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-desktop.ps1",
+    "desktop": "npm --prefix frontend run build && electron .",
+    "test:desktop": "node --test desktop/tests/*.test.cjs",
+    "smoke:backend": "node scripts/smoke-backend.cjs",
+    "smoke:desktop": "node scripts/smoke-desktop.cjs"
+  },
+  "devDependencies": {
+    "electron": "44.7.2",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "ru.studysurfers.desktop",
+    "productName": "Study Surfers",
+    "directories": { "output": "release", "buildResources": "desktop/resources" },
+    "files": ["desktop/*.cjs", "package.json"],
+    "extraResources": [
+      { "from": "build/backend/study-surfers-backend", "to": "backend" },
+      { "from": "desktop/resources/icon.ico", "to": "icon.ico" }
+    ],
+    "asar": true,
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "portable", "arch": ["x64"] }],
+      "icon": "desktop/resources/icon.ico",
+      "signExecutable": false
+    },
+    "nsis": {
+      "artifactName": "Study-Surfers-${version}-Setup-${arch}.${ext}",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "Study Surfers",
+      "installerLanguages": ["ru_RU"],
+      "language": "1049"
+    },
+    "portable": { "artifactName": "Study-Surfers-${version}-Portable-${arch}.${ext}" },
+    "publish": null
+  }
+}

@@ -1,0 +1,1768 @@
+/*
+ * HUD и оверлеи забега. Мир игры дневной и яркий в любой теме, поэтому HUD
+ * не следует светлой/тёмной теме меню: табло — тёмное матовое стекло с белым
+ * текстом (его держат 3D-дроны), карточки ответов — светлое стекло с тёмным текстом.
+ */
+
+.play-screen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #cdeeff;
+  color: #14203a;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Свайпы управляют бегуном, а не прокруткой и масштабом страницы */
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+/* Низкое качество: без размытия фона под стеклом — оно пересчитывается каждый кадр */
+.play-screen[data-quality="low"] .board,
+.play-screen[data-quality="low"] .lane-card {
+  backdrop-filter: none;
+}
+
+.game-canvas {
+  position: absolute !important;
+  inset: 0;
+}
+
+.play-error {
+  max-width: 520px;
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  background: #ffffff;
+  box-shadow: var(--shadow-lg);
+}
+
+.play-error-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-hud);
+}
+
+.hud button {
+  pointer-events: auto;
+}
+
+/* --- Полоса маршрута --- */
+
+.route {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgb(20 32 58 / 0.18);
+}
+
+.route-track {
+  display: flex;
+  gap: 2px;
+  height: 100%;
+}
+
+.route-tick {
+  flex: 1;
+  background: rgb(255 255 255 / 0.35);
+  transition: background var(--motion-base);
+}
+
+.route-tick.is-correct { background: #22c55e; }
+.route-tick.is-wrong { background: #ef4444; }
+
+.route-runner {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+  translate: -50% -50%;
+  transition: left 600ms var(--motion-ease-out);
+}
+
+/* --- Верхняя строка: счёт, комбо, жизни, кнопки --- */
+
+.hud-top {
+  position: absolute;
+  top: 18px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.hud-score {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.hud-score-value {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 2px 0 rgb(20 32 58 / 0.35), 0 6px 18px rgb(20 32 58 / 0.3);
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-score-pop {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 4px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: score-pop 1.1s var(--motion-ease-out) forwards;
+}
+
+.hud-score-pop.is-plus { color: #fff36b; text-shadow: 0 2px 6px rgb(0 0 0 / 0.35); }
+.hud-score-pop small { margin-left: 5px; font-size: 13px; opacity: 0.85; }
+.hud-score-pop.is-minus { color: #ff6b6b; text-shadow: 0 2px 6px rgb(0 0 0 / 0.35); }
+
+@keyframes score-pop {
+  0% { opacity: 0; translate: 0 8px; scale: 0.7; }
+  20% { opacity: 1; translate: 0 0; scale: 1.15; }
+  70% { opacity: 1; scale: 1; }
+  100% { opacity: 0; translate: 0 -14px; }
+}
+
+.hud-coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, #ffd85a, #ffb703);
+  color: #5a3a00;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgb(255 170 0 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.6);
+  animation: coin-bump 260ms var(--motion-spring);
+}
+
+@keyframes coin-bump {
+  from { scale: 1.25; }
+}
+
+.hud-combo {
+  --combo-a: #ff7a18;
+  --combo-b: #ff3d6e;
+  --combo-glow: rgb(255 90 60 / 0.45);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgb(20 32 58 / 0.45);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+}
+
+.hud-combo.is-tier-3 { --combo-a: #ff4f6d; --combo-b: #c026d3; --combo-glow: rgb(220 50 160 / 0.5); }
+.hud-combo.is-tier-4 { --combo-a: #7c3aed; --combo-b: #f59e0b; --combo-glow: rgb(250 170 40 / 0.55); }
+.hud-combo.is-tier-5 { --combo-a: #ff3df0; --combo-b: #22d3ee; --combo-glow: rgb(160 110 255 / 0.6); }
+
+.hud-combo-mult { font-variant-numeric: tabular-nums; }
+
+/* Деления до следующего множителя: сколько верных подряд ещё нужно. */
+.hud-combo-pips {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.hud-combo-pips i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.28);
+  transition: background 200ms;
+}
+
+.hud-combo-pips i.is-on { background: #ffffff; box-shadow: 0 0 6px rgb(255 255 255 / 0.8); }
+
+.hud-combo-streak {
+  padding-left: 6px;
+  border-left: 1px solid rgb(255 255 255 / 0.35);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.85;
+  animation: combo-count 320ms var(--motion-spring);
+}
+
+@keyframes combo-count {
+  from { scale: 1.5; opacity: 1; }
+}
+
+.hud-combo.is-hot {
+  background: linear-gradient(90deg, var(--combo-a), var(--combo-b));
+  box-shadow: 0 4px 16px var(--combo-glow);
+  animation: combo-tier-in 420ms var(--motion-spring), combo-glow 1.2s 420ms ease-in-out infinite alternate;
+}
+
+.hud-combo.is-tier-4 {
+  background-size: 200% 100%;
+  animation: combo-tier-in 420ms var(--motion-spring), combo-glow 1.2s 420ms ease-in-out infinite alternate, combo-shimmer 2.4s linear infinite;
+}
+
+/* ×5 — перелив через всю радугу: максимум виден краем глаза. */
+.hud-combo.is-tier-5 {
+  background: linear-gradient(90deg, #ff3df0, #f59e0b, #22d3ee, #7c3aed, #ff3df0);
+  background-size: 300% 100%;
+  animation: combo-tier-in 420ms var(--motion-spring), combo-glow 0.9s 420ms ease-in-out infinite alternate, combo-shimmer 3s linear infinite;
+}
+
+@keyframes combo-tier-in {
+  from { scale: 1.45; }
+}
+
+@keyframes combo-glow {
+  to { box-shadow: 0 4px 24px var(--combo-glow), 0 0 0 1px rgb(255 255 255 / 0.25); }
+}
+
+@keyframes combo-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.hud-combo.is-broken { animation: combo-break 380ms ease-out; }
+
+@keyframes combo-break {
+  0%, 100% { translate: 0; }
+  20% { translate: -5px; background: rgb(239 68 68 / 0.75); }
+  45% { translate: 4px; }
+  70% { translate: -2px; }
+}
+
+.hud-combo-broke {
+  position: absolute;
+  left: 4px;
+  top: calc(100% + 4px);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffd2d2;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+  white-space: nowrap;
+  animation: combo-broke 1.8s ease-out forwards;
+}
+
+@keyframes combo-broke {
+  0% { opacity: 0; translate: 0 -4px; }
+  12%, 70% { opacity: 1; translate: 0 0; }
+  100% { opacity: 0; }
+}
+
+.hud-chase {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  padding: 4px 10px 6px;
+  border-radius: var(--radius-pill);
+  background: rgb(150 24 40 / 0.82);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  animation: chase-in 0.25s ease-out, chase-blink 0.5s steps(2) 6;
+}
+
+.hud-chase i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: #ffd166;
+  transform-origin: left;
+  animation: chase-drain var(--chase-seconds, 4s) linear forwards;
+}
+
+.hud-chase.is-graze { background: rgb(176 104 16 / 0.82); }
+.hud-chase.is-crash { background: rgb(110 10 30 / 0.9); }
+
+@keyframes chase-in { from { opacity: 0; transform: translateY(-6px); } }
+@keyframes chase-blink { 50% { filter: brightness(1.35); } }
+@keyframes chase-drain { to { transform: scaleX(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-chase { animation: none; }
+}
+
+.hud-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hud-lives {
+  display: flex;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  background: rgb(20 32 58 / 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.hud-lives .is-full { color: #ff4d6d; filter: drop-shadow(0 0 4px rgb(255 77 109 / 0.6)); }
+.hud-lives .is-empty { color: rgb(255 255 255 / 0.55); }
+
+.hud-button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(20 32 58 / 0.42);
+  color: #ffffff;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background var(--motion-fast);
+}
+
+.hud-button:hover {
+  background: rgb(20 32 58 / 0.6);
+}
+
+.hud-button[data-state="open"] { background: rgb(20 32 58 / 0.85); }
+
+.hud-audio-panel {
+  z-index: 2;
+  width: 244px;
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 18px;
+  background: #1e293e;
+  color: #fff;
+  box-shadow: 0 8px 24px rgb(8 15 30 / 0.3);
+  pointer-events: auto;
+  color-scheme: dark;
+}
+
+.hud-audio-channel { display: flex; align-items: center; gap: 10px; }
+.hud-audio-mute {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+  cursor: pointer;
+}
+.hud-audio-mute:hover { background: rgb(255 255 255 / 0.2); }
+.hud-audio-mute[aria-pressed="true"] { color: #b1bed4; background: rgb(255 255 255 / 0.04); }
+.hud-audio-level { display: grid; flex: 1; min-width: 0; gap: 2px; }
+.hud-audio-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; }
+.hud-audio-label > span { color: #b1bed4; font-variant-numeric: tabular-nums; }
+.hud-audio-level input {
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(to right, #ffad78 var(--audio-level), #536078 var(--audio-level)) center / 100% 4px no-repeat;
+  cursor: pointer;
+}
+.hud-audio-level input::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
+.hud-audio-level input::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: #fff; }
+.hud-audio-mute:focus-visible,
+.hud-audio-level input:focus-visible { outline: 2px solid #ffad78; outline-offset: 3px; }
+
+.hud-fps {
+  position: absolute;
+  top: 70px;
+  right: 22px;
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 8px);
+  background: rgb(14 22 40 / 0.62);
+  color: #e9f0ff;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.hud-fps output {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.hud-fps small {
+  max-width: 220px;
+  overflow: hidden;
+  color: #a9b8d6;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud-fps.is-weak small {
+  color: #ffcf7a;
+}
+
+/* --- Табло вопроса (текст поверх 3D-экрана дрона) --- */
+
+.board {
+  position: absolute;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 16px 24px 14px;
+  border: 1px solid rgb(170 205 255 / 0.32);
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 140% at 50% -30%, rgb(90 140 255 / 0.28), transparent 60%),
+    linear-gradient(180deg, rgb(18 27 58 / 0.74), rgb(10 15 36 / 0.84));
+  box-shadow:
+    0 22px 60px rgb(6 12 32 / 0.38),
+    0 0 0 5px rgb(255 255 255 / 0.07),
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(0 0 0 / 0.3);
+  color: #f3f7ff;
+  opacity: 0;
+  backdrop-filter: blur(16px) saturate(1.35);
+  transition: opacity 280ms var(--motion-ease);
+  will-change: transform;
+}
+
+/* Полоска «подсветки» по верхней кромке в цветах треков */
+.board::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 12%;
+  right: 12%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--lane-1), var(--lane-2), var(--lane-3), var(--lane-4), transparent);
+  opacity: 0.9;
+  filter: drop-shadow(0 0 6px rgb(120 170 255 / 0.8));
+}
+
+/* Крепления тросов дронов */
+.board::after {
+  content: "";
+  position: absolute;
+  inset: -5px min(90px, 12%) auto;
+  height: 6px;
+  background:
+    radial-gradient(circle at 0 50%, #dfe7f5 0 4px, transparent 5px),
+    radial-gradient(circle at 100% 50%, #dfe7f5 0 4px, transparent 5px);
+  pointer-events: none;
+}
+
+.board.is-visible {
+  opacity: 1;
+}
+
+.board-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9fc7ff;
+}
+
+.board-section {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgb(243 247 255 / 0.6);
+}
+
+.board-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 0.12);
+  color: #ffffff;
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.board-badge.is-ai {
+  background: rgb(139 92 246 / 0.4);
+}
+
+.board-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  text-align: center;
+  font-weight: 600;
+  line-height: 1.3;
+  animation: board-in 380ms var(--motion-ease-out);
+}
+
+.board-prompt .md {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.board-prompt .md p {
+  margin: 0;
+}
+
+.board-prompt .katex {
+  font-size: 1.08em;
+}
+
+@keyframes board-in {
+  from { opacity: 0; translate: 0 10px; filter: blur(4px); }
+  to { opacity: 1; translate: 0 0; filter: none; }
+}
+
+.board-idle {
+  grid-row: 1 / -1;
+  display: grid;
+  place-items: center;
+  padding: 0 10%;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgb(243 247 255 / 0.85);
+}
+
+.board-timer {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 0.12);
+}
+
+.board-timer span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ef4444 0%, #f5a623 30%, #22c55e 70%);
+  background-size: 100vw 100%;
+  transform-origin: left;
+  animation: timer linear forwards;
+}
+
+.board-timer span.is-paused {
+  animation-play-state: paused;
+}
+
+@keyframes timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* --- Карточки ответов над треками --- */
+
+.lane-card {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  max-height: 104px;
+  padding: 10px 14px 10px 10px;
+  border: 2px solid rgb(255 255 255 / 0.9);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.96);
+  box-shadow: 0 8px 24px rgb(20 32 58 / 0.22), inset 0 -3px 0 color-mix(in srgb, var(--lane-color) 70%, transparent);
+  color: #14203a;
+  text-align: left;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  translate: 0 -50%;
+  transition: scale 160ms var(--motion-spring), background 160ms, box-shadow 160ms, opacity 240ms, border-color 160ms;
+  animation: card-in 420ms var(--motion-ease-out) backwards;
+}
+
+@keyframes card-in {
+  from { opacity: 0; translate: 0 calc(-50% + 24px); scale: 0.9; }
+  to { opacity: 1; translate: 0 -50%; scale: 1; }
+}
+
+.lane-card-letter {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--lane-color);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--lane-color) 50%, transparent);
+}
+
+.lane-card-text {
+  flex: 1;
+  min-width: 0;
+  max-height: 80px;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.lane-card.is-current {
+  scale: 1.06;
+  border-color: var(--lane-color);
+  background: rgb(255 255 255 / 0.95);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--lane-color) 35%, transparent), 0 14px 32px rgb(20 32 58 / 0.3);
+}
+
+.lane-card.is-correct {
+  scale: 1.08;
+  border-color: #22c55e;
+  background: #eafff1;
+  box-shadow: 0 0 0 5px rgb(34 197 94 / 0.35), 0 14px 32px rgb(20 32 58 / 0.25);
+}
+
+.lane-card.is-correct .lane-card-letter { background: #22c55e; }
+
+.lane-card.is-wrong {
+  border-color: #ef4444;
+  background: #fff0f0;
+  animation: card-shake 360ms ease-in-out;
+}
+
+.lane-card.is-wrong .lane-card-letter { background: #ef4444; }
+
+.lane-card.is-ghost {
+  opacity: 1;
+}
+
+/* Усиления живут у нижнего края, вне зоны вопроса и карточек ответов. */
+.modifier-hud { position: absolute; left: 22px; bottom: 96px; display: grid; gap: 8px; pointer-events: none; max-width: min(340px, 47vw); }
+.modifier-badge { position: relative; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 9px 12px 12px; border: 1px solid color-mix(in srgb, var(--modifier-color) 65%, transparent); border-radius: 14px; background: #102139f2; box-shadow: 0 4px 18px #07102238; color: #fff; overflow: hidden; }
+.modifier-badge-icon { color: var(--modifier-color); display: flex; }
+.modifier-badge-text { display: grid; gap: 2px; }
+.modifier-badge-text strong { font-size: 13px; font-weight: 750; }
+.modifier-badge-text > span { font-size: 10px; color: #c8d6e6; }
+.modifier-time { margin-left: auto; padding-left: 4px; white-space: nowrap; font-size: 14px; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--modifier-color); }
+.modifier-meter { position: absolute; height: 3px; left: 0; right: 0; bottom: 0; background: #ffffff16; }
+.modifier-meter > span { display: block; width: 100%; height: 100%; background: var(--modifier-color); transform-origin: left; }
+.modifier-badge[data-expiring="true"] .modifier-time { color: #ffd5a3; }
+.modifier-charges { display: flex; gap: 3px; }
+.modifier-charges i { width: 5px; height: 13px; border-radius: 2px; background: #ffffff20; }
+.modifier-charges i.is-on { background: var(--modifier-color); }
+@media (max-width: 600px) {
+  .modifier-hud { left: 10px; bottom: 104px; max-width: 52vw; gap: 5px; }
+  .modifier-badge { gap: 7px; padding: 7px 9px 10px; min-height: 45px; border-radius: 11px; }
+  .modifier-badge-text > span { display: none; }
+  .modifier-badge-text strong { font-size: 11px; }
+  .modifier-time { font-size: 12px; }
+  .modifier-badge-icon svg { width: 17px; height: 17px; }
+}
+@media (max-height: 520px) {
+  .modifier-hud { bottom: 15px; left: 14px; }
+  .modifier-badge-text > span { display: none; }
+  .play-screen .hud .key-hints { display: none; }
+}
+
+.lane-card.is-faded {
+  opacity: 0.35;
+}
+
+@keyframes card-shake {
+  25% { translate: -6px -50%; }
+  50% { translate: 6px -50%; }
+  75% { translate: -3px -50%; }
+}
+
+/* После ответа карточки уходят, уступая место следующему вопросу */
+.lane-cards.is-resolved .lane-card {
+  transition-delay: 0ms;
+}
+
+/* --- Обратная связь --- */
+
+.screen-flash {
+  position: absolute;
+  inset: 0;
+  animation: flash 650ms ease-out forwards;
+}
+
+.screen-flash.is-correct { box-shadow: inset 0 0 120px 30px rgb(34 197 94 / 0.45); }
+.screen-flash.is-wrong { box-shadow: inset 0 0 140px 40px rgb(239 68 68 / 0.55); }
+/* Новый множитель или веха — кромка экрана в их цвете поверх зелёной вспышки. */
+.screen-flash.is-combo-2 { box-shadow: inset 0 0 120px 30px rgb(34 197 94 / 0.4), inset 0 0 60px 10px rgb(255 122 24 / 0.35); }
+.screen-flash.is-combo-3 { box-shadow: inset 0 0 130px 34px rgb(255 61 110 / 0.45), inset 0 0 60px 12px rgb(192 38 211 / 0.35); animation-duration: 800ms; }
+.screen-flash.is-combo-4 { box-shadow: inset 0 0 150px 40px rgb(124 58 237 / 0.45), inset 0 0 70px 14px rgb(245 158 11 / 0.45); animation-duration: 950ms; }
+.screen-flash.is-combo-5 { box-shadow: inset 0 0 170px 46px rgb(255 61 240 / 0.4), inset 0 0 80px 16px rgb(34 211 238 / 0.45); animation-duration: 1s; }
+.screen-flash.is-combo-gold { box-shadow: inset 0 0 150px 40px rgb(245 180 11 / 0.5), inset 0 0 60px 12px rgb(255 240 160 / 0.4); animation-duration: 950ms; }
+
+@keyframes flash {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.combo-banner {
+  --combo-a: #ff7a18;
+  --combo-b: #ff3d6e;
+  --combo-size: clamp(30px, 4.4vw, 50px);
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  translate: -50% -50%;
+  display: grid;
+  justify-items: center;
+  font-family: var(--font-display);
+  color: #ffffff;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: banner 1.05s var(--motion-ease-out) forwards;
+}
+
+.combo-banner.is-tier-3 { --combo-a: #ff4f6d; --combo-b: #c026d3; --combo-size: clamp(34px, 5vw, 58px); }
+.combo-banner.is-tier-4 { --combo-a: #7c3aed; --combo-b: #f59e0b; --combo-size: clamp(38px, 5.8vw, 66px); animation-name: banner-max; animation-duration: 1.15s; }
+.combo-banner.is-tier-5 { --combo-a: #7c3aed; --combo-b: #ff3df0; --combo-size: clamp(42px, 6.4vw, 74px); animation-name: banner-max; animation-duration: 1.2s; }
+
+.combo-banner-word {
+  position: relative;
+  z-index: 1;
+  font-size: calc(var(--combo-size) * 0.42);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff7d6;
+  text-shadow: 0 2px 0 var(--combo-b), 0 4px 12px rgb(0 0 0 / 0.35);
+  animation: banner-word 1.05s var(--motion-ease-out) both;
+}
+
+.combo-banner-title {
+  position: relative;
+  z-index: 1;
+  font-size: var(--combo-size);
+  font-weight: 800;
+  line-height: 1;
+  -webkit-text-stroke: 2px var(--combo-b);
+  text-shadow: 0 5px 0 var(--combo-a), 0 12px 30px rgb(0 0 0 / 0.3);
+}
+
+/* ×3 и выше: по надписи пробегает блик. */
+.combo-banner:is(.is-tier-3, .is-tier-4, .is-tier-5) .combo-banner-title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.95) 50%, transparent 62%) no-repeat;
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: combo-glint 520ms 180ms ease-in-out both;
+}
+
+@keyframes combo-glint {
+  to { background-position: -30% 0; }
+}
+
+/* ×5: края букв переливаются и расходятся по цветам. */
+.combo-banner.is-tier-5 .combo-banner-title { animation: combo-prism 900ms linear both; }
+
+@keyframes combo-prism {
+  0% { -webkit-text-stroke-color: #ff3df0; text-shadow: -4px 0 #ff3df0aa, 4px 0 #22d3eeaa, 0 5px 0 #7c3aed; }
+  33% { -webkit-text-stroke-color: #f59e0b; text-shadow: -2px 0 #f59e0b99, 2px 0 #22d3ee99, 0 5px 0 #7c3aed; }
+  66% { -webkit-text-stroke-color: #22d3ee; text-shadow: -1px 0 #22d3ee66, 1px 0 #ff3df066, 0 5px 0 #7c3aed; }
+  100% { -webkit-text-stroke-color: #ff3df0; text-shadow: 0 5px 0 #7c3aed, 0 12px 30px rgb(0 0 0 / 0.3); }
+}
+
+@keyframes banner {
+  0% { opacity: 0; scale: 0.4; }
+  18% { opacity: 1; scale: 1.12; }
+  32% { scale: 1; }
+  75% { opacity: 1; }
+  100% { opacity: 0; scale: 1.04; translate: -50% -72%; }
+}
+
+/* ×4 и вехи серии: влетает с поворотом и пружинит. */
+@keyframes banner-max {
+  0% { opacity: 0; scale: 0.3; rotate: -6deg; }
+  16% { opacity: 1; scale: 1.2; rotate: 2deg; }
+  28% { scale: 0.96; rotate: 0deg; }
+  38% { scale: 1.03; }
+  48% { scale: 1; }
+  78% { opacity: 1; }
+  100% { opacity: 0; scale: 1.05; translate: -50% -72%; }
+}
+
+@keyframes banner-word {
+  0%, 10% { opacity: 0; translate: 0 10px; }
+  30% { opacity: 1; translate: 0 0; }
+}
+
+@keyframes banner-fade {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.combo-ring,
+.combo-rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.combo-ring {
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border: 4px solid var(--combo-b);
+  box-shadow: 0 0 18px var(--combo-a), inset 0 0 12px var(--combo-a);
+  animation: combo-ring 700ms ease-out forwards;
+}
+
+@keyframes combo-ring {
+  from { scale: 0.3; opacity: 0.95; }
+  to { scale: 3.2; opacity: 0; border-width: 1px; }
+}
+
+/* Лучи гаснут раньше, чем на табло появится следующий вопрос. */
+.combo-rays {
+  width: 340px;
+  height: 340px;
+  margin: -170px 0 0 -170px;
+  background: repeating-conic-gradient(from 0deg, rgb(255 236 170 / 0.5) 0deg 7deg, transparent 7deg 24deg);
+  mask: radial-gradient(ellipse 50% 38%, #000 25%, transparent 100%);
+  animation: combo-rays 850ms ease-out forwards;
+}
+
+@keyframes combo-rays {
+  0% { opacity: 0; scale: 0.5; rotate: 0deg; }
+  25% { opacity: 0.85; scale: 1; }
+  100% { opacity: 0; scale: 1.15; rotate: 40deg; }
+}
+
+.combo-rays.is-back {
+  width: 460px;
+  height: 460px;
+  margin: -230px 0 0 -230px;
+  background: repeating-conic-gradient(from 12deg, rgb(255 61 240 / 0.35) 0deg 5deg, transparent 5deg 18deg);
+  animation: combo-rays-back 950ms ease-out forwards;
+}
+
+@keyframes combo-rays-back {
+  0% { opacity: 0; scale: 0.4; rotate: 0deg; }
+  30% { opacity: 0.7; scale: 1; }
+  100% { opacity: 0; scale: 1.1; rotate: -50deg; }
+}
+
+.combo-ring.is-late {
+  border-color: #22d3ee;
+  box-shadow: 0 0 18px #22d3ee, inset 0 0 12px #22d3ee;
+  animation-delay: 140ms;
+  animation-fill-mode: both;
+}
+
+/* ×4 и ×5: языки пламени поднимаются из-за надписи. */
+.combo-flames {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  pointer-events: none;
+}
+
+.combo-flames i {
+  position: absolute;
+  left: var(--fx);
+  bottom: 0;
+  width: 30px;
+  height: 46px;
+  margin-left: -15px;
+  border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
+  background: radial-gradient(ellipse at 50% 75%, #fff3c4 0%, var(--combo-b) 40%, transparent 72%);
+  filter: blur(1.5px);
+  opacity: 0;
+  animation: combo-flame 700ms ease-out both;
+}
+
+@keyframes combo-flame {
+  0% { opacity: 0; translate: 0 18px; scale: 0.5 0.4; }
+  25% { opacity: 0.95; scale: 1 1.15; }
+  100% { opacity: 0; translate: 0 -64px; scale: 0.4 1.5; }
+}
+
+/* ×5: горизонтальная вспышка через весь экран — короткая и тонкая. */
+.combo-flare {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 130vw;
+  height: 6px;
+  margin: -3px 0 0 -65vw;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, #22d3ee 25%, #ffffff 50%, #ff3df0 75%, transparent);
+  box-shadow: 0 0 18px #ffffffaa;
+  pointer-events: none;
+  animation: combo-flare 520ms ease-out forwards;
+}
+
+@keyframes combo-flare {
+  0% { opacity: 0; scale: 0 1; }
+  30% { opacity: 1; scale: 1 1; }
+  100% { opacity: 0; scale: 1 0.2; }
+}
+
+/* Веха серии: медаль-печать, фонтан монет и бонус, улетающий в счёт.
+   Медаль слева, подпись и бонус справа — по высоте помещается между табло и карточками. */
+.streak-medal {
+  --disc: 96px;
+  position: absolute;
+  top: 43%;
+  left: 50%;
+  translate: -50% -50%;
+  display: grid;
+  grid-template-columns: var(--disc) auto;
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: center;
+  column-gap: 18px;
+  font-family: var(--font-display);
+  color: #ffffff;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: medal 1.3s var(--motion-ease-out) forwards;
+}
+
+.streak-medal-label {
+  position: relative;
+  z-index: 1;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  align-self: end;
+  color: #fff4c2;
+  text-shadow: 0 2px 0 #b45309, 0 3px 10px rgb(0 0 0 / 0.4);
+}
+
+.streak-medal-disc {
+  --medal-a: #fde68a;
+  --medal-b: #d97706;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  grid-row: 1 / span 2;
+  width: var(--disc);
+  height: var(--disc);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbe6 0%, var(--medal-a) 30%, var(--medal-b) 100%);
+  box-shadow: 0 0 0 5px #fff4c2, 0 0 0 9px var(--medal-b), 0 10px 30px rgb(0 0 0 / 0.35), 0 0 40px var(--medal-a);
+  animation: medal-stamp 520ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.streak-medal-disc b {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 0.95;
+  color: #ffffff;
+  -webkit-text-stroke: 2px #92400e;
+  text-shadow: 0 3px 0 #92400e;
+}
+
+.streak-medal-disc small {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: #78350f;
+}
+
+.streak-medal-bonus {
+  position: relative;
+  z-index: 1;
+  align-self: start;
+  justify-self: start;
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff36b;
+  -webkit-text-stroke: 2px #92400e;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 #b45309, 0 6px 16px rgb(0 0 0 / 0.45);
+  animation: medal-bonus 1.3s ease-in-out both;
+}
+
+.streak-medal-flare,
+.streak-medal-wave,
+.streak-coin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+}
+
+.streak-medal-flare {
+  width: 120vw;
+  height: 90px;
+  margin: -45px 0 0 -60vw;
+  background: radial-gradient(ellipse 50% 50%, rgb(255 236 170 / 0.55), transparent 70%);
+  animation: medal-flare 800ms ease-out forwards;
+}
+
+.streak-medal-wave {
+  left: calc(var(--disc) / 2);
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 55%, rgb(253 230 138 / 0.8) 62%, transparent 72%);
+  animation: medal-wave 650ms 80ms ease-out both;
+}
+
+.streak-coin {
+  left: calc(var(--disc) / 2);
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbe6, #facc15 45%, #b45309);
+  box-shadow: 0 0 6px rgb(250 204 21 / 0.7);
+  animation: medal-coin 900ms cubic-bezier(0.2, 0.6, 0.6, 1) both;
+}
+
+@keyframes medal {
+  0%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes medal-stamp {
+  0% { scale: 2.4; opacity: 0; rotate: -14deg; }
+  60% { scale: 0.92; opacity: 1; rotate: 2deg; }
+  100% { scale: 1; rotate: 0deg; }
+}
+
+@keyframes medal-bonus {
+  0%, 15% { opacity: 0; translate: -16px 0; scale: 0.6; }
+  30% { opacity: 1; translate: 0 0; scale: 1.1; }
+  52% { opacity: 1; translate: 0 0; scale: 1; }
+  100% { opacity: 0; translate: var(--to-x, 0) var(--to-y, -200px); scale: 0.45; }
+}
+
+@keyframes medal-flare {
+  0% { opacity: 0; scale: 0.2 0.6; }
+  25% { opacity: 1; scale: 1 1; }
+  100% { opacity: 0; scale: 1 0.3; }
+}
+
+@keyframes medal-wave {
+  from { scale: 0.6; opacity: 1; }
+  to { scale: 3.4; opacity: 0; }
+}
+
+@keyframes medal-coin {
+  0% { translate: 0 0; opacity: 0; rotate: 0deg; scale: 0.6 1; }
+  10% { opacity: 1; }
+  40% { translate: calc(var(--x) * 0.6) var(--peak); scale: 0.2 1; }
+  60% { scale: 1 1; }
+  100% { translate: var(--x) 170px; opacity: 0; rotate: 300deg; scale: 0.3 1; }
+}
+
+.combo-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  background: #fff6c8;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  filter: drop-shadow(0 0 4px var(--combo-a));
+  animation: combo-spark 720ms cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+.combo-spark:nth-of-type(3n) { background: var(--combo-b); width: 8px; height: 8px; }
+
+@keyframes combo-spark {
+  0% { translate: 0 0; scale: 0.4; opacity: 0; }
+  15% { opacity: 1; scale: 1.3; }
+  100% { translate: var(--x) var(--y); scale: 0.2; opacity: 0; rotate: 120deg; }
+}
+
+.countdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  font-family: var(--font-display);
+  font-size: clamp(72px, 12vw, 160px);
+  font-weight: 800;
+  color: #ffffff;
+  -webkit-text-stroke: 3px #d63f22;
+  text-shadow: 0 8px 0 #d63f22, 0 18px 40px rgb(20 32 58 / 0.35);
+  animation: count 750ms var(--motion-ease-out) forwards;
+}
+
+@keyframes count {
+  0% { opacity: 0; scale: 1.8; }
+  25% { opacity: 1; scale: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; scale: 0.85; }
+}
+
+.start-hint {
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  translate: -50% 0;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgb(20 32 58 / 0.75);
+  color: #ffffff;
+  font-size: 14px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.mistake-toast {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  display: grid;
+  gap: 4px;
+  max-width: min(420px, 40vw);
+  padding: 12px 16px;
+  border-left: 5px solid #ef4444;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 10px 28px rgb(20 32 58 / 0.25);
+  animation: toast-in 320ms var(--motion-ease-out);
+}
+
+.mistake-toast-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1f8a3e;
+}
+
+.mistake-toast-correct {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.mistake-toast-why {
+  font-size: 13px;
+  color: #5b6883;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; translate: -20px 0; }
+}
+
+.key-hints {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  background: rgb(20 32 58 / 0.5);
+  color: #ffffff;
+  font-size: 13px;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  translate: -50% 0;
+}
+
+/* Клавиши в забеге светлые в любой теме: тёмная тема красила их фон почти в цвет подложки. */
+.key-hints .kbd,
+.move-hint .kbd {
+  display: inline-block;
+  min-width: 20px;
+  border-color: rgb(255 255 255 / 0.7);
+  background: #f3f6fc;
+  box-shadow: 0 1px 0 rgb(20 32 58 / 0.45);
+  color: #14203a;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.key-hints .kbd {
+  margin-right: 2px;
+}
+
+.move-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px 10px 14px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #ff7a18, #ff3d6e);
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgb(255 80 60 / 0.45);
+  translate: -50% 0;
+  animation: hint-in 320ms var(--motion-spring), hint-pulse 0.9s ease-in-out 320ms infinite alternate;
+}
+
+.move-hint.is-slide {
+  background: linear-gradient(90deg, #2b9bf0, #8b5cf6);
+  box-shadow: 0 10px 30px rgb(80 110 255 / 0.45);
+}
+
+.move-hint.is-board {
+  background: linear-gradient(90deg, #12b886, #2b9bf0);
+  box-shadow: 0 10px 30px rgb(30 160 160 / 0.45);
+}
+
+.move-hint strong {
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
+.move-hint .kbd {
+  font-size: 13px;
+}
+
+@keyframes hint-in {
+  from { opacity: 0; translate: -50% 16px; scale: 0.85; }
+}
+
+@keyframes hint-pulse {
+  to { scale: 1.06; }
+}
+
+/* --- Пауза --- */
+
+.pause-overlay,
+.results-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(20 32 58 / 0.35);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+  animation: fade-in 240ms ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+.pause-card {
+  display: grid;
+  gap: 10px;
+  width: min(340px, 100%);
+  padding: 24px;
+  border-radius: 26px;
+  background: rgb(255 255 255 / 0.95);
+  box-shadow: var(--shadow-lg);
+  color-scheme: light;
+  color: #14203a;
+}
+
+.pause-card h2 {
+  margin: 0 0 6px;
+  text-align: center;
+}
+
+.pause-card .secondary-button,
+.pause-card .text-button,
+.pause-card .primary-button {
+  justify-content: center;
+}
+
+/* --- Результаты --- */
+
+/* После финиша свайпы прокручивают разбор ошибок, а не управляют бегуном. */
+.play-screen:has(.results-overlay) {
+  touch-action: pan-y;
+}
+
+.results-overlay {
+  background: rgb(20 32 58 / 0.25);
+  backdrop-filter: blur(3px);
+  animation-duration: 500ms;
+}
+
+.results-card {
+  display: grid;
+  gap: 18px;
+  width: min(720px, 100%);
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 28px;
+  border-radius: 28px;
+  background: rgb(255 255 255 / 0.96);
+  box-shadow: 0 30px 80px rgb(20 32 58 / 0.35);
+  color-scheme: light;
+  color: #14203a;
+  user-select: text;
+  animation: results-in 520ms var(--motion-spring);
+}
+
+@keyframes results-in {
+  from { opacity: 0; translate: 0 40px; scale: 0.94; }
+}
+
+.results-head {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.results-head h2 {
+  margin: 0;
+  font-size: 34px;
+}
+
+.results-stars {
+  display: flex;
+  gap: 8px;
+  color: #d5dbe6;
+}
+
+.results-stars .is-on {
+  color: #ffc53d;
+  filter: drop-shadow(0 4px 8px rgb(255 197 61 / 0.5));
+  animation: star-pop 500ms var(--motion-spring) backwards;
+}
+
+@keyframes star-pop {
+  from { scale: 0; rotate: -40deg; }
+}
+
+.results-score {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.results-record {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: #fff4cc;
+  color: #9a6408;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.results-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 0;
+}
+
+.results-stats .results-impacts dd {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.results-stats div {
+  padding: 12px;
+  border-radius: 16px;
+  background: #f1f5fb;
+  text-align: center;
+}
+
+.results-stats dt {
+  font-size: 12px;
+  color: #5b6883;
+}
+
+.results-stats dd {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.results-mistakes h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.results-mistakes ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.results-mistakes li {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #f7f9fc;
+}
+
+.mistake-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0;
+  font-weight: 600;
+}
+
+.mistake-prompt .board-badge {
+  background: #ede6ff;
+  color: #6b3fc4;
+}
+
+.mistake-line {
+  margin: 0;
+}
+
+.mistake-line > span:first-child {
+  display: inline-block;
+  min-width: 92px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mistake-line.is-wrong > span:first-child { color: #c7283a; }
+.mistake-line.is-correct > span:first-child { color: #1f8a3e; }
+
+.mistake-line small {
+  color: #5b6883;
+}
+
+.mistake-explanation {
+  margin: 0;
+  color: #3a4866;
+  font-size: 14px;
+}
+
+.results-clean {
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+  color: #1f8a3e;
+}
+
+.results-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.results-save {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #8691a8;
+}
+
+@media (max-width: 720px) {
+  .streak-medal { --disc: 76px; column-gap: 12px; }
+  .streak-medal-disc b { font-size: 34px; }
+  .streak-medal-bonus { font-size: 32px; }
+
+  .results-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .key-hints {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .move-hint,
+  .lane-card,
+  .board-prompt,
+  .countdown,
+  .combo-banner,
+  .streak-medal {
+    animation-duration: 1ms;
+  }
+}
+.board-timer > span.is-distance-driven { animation: none; }
+.night-speedometer { position: absolute; right: 22px; bottom: 52px; width: 164px; padding: 13px 15px; border: 1px solid #72b4b530; border-radius: 12px; background: #101c29d9; color: #dce8ea; pointer-events: none; font-variant-numeric: tabular-nums; }
+.night-speedometer > span { font-size: 8px; letter-spacing: .12em; color: #86a4ae; }
+.night-speedometer output { display: block; font-size: 25px; font-weight: 700; margin-top: 2px; color: #a5e5dd; }
+.night-speed-track { height: 3px; background: #55717a60; margin: 8px 0 4px; }
+.night-speed-track > span { display: block; height: 100%; background: #55d6cc; transform: scaleX(0); transform-origin: left; }
+.night-speedometer small { display: flex; justify-content: space-between; font-size: 9px; color: #9ab0b9; }
+.night-speedometer p { font-size: 9px; color: #8eabb5; margin: 8px 0 0; }
+.play-screen[data-world="night-maglev"] { --lane-1: #55d6cc; --lane-2: #e6ae62; --lane-3: #8fb6e8; --lane-4: #c9d9bc; }
+.play-screen[data-world="night-maglev"] .board { background: #12232eec; border-color: #527a864d; color: #e2ebed; }
+.play-screen[data-world="night-maglev"] .lane-card { background: #142733f5; border-color: #57758280; color: #e3ecee; max-height: 136px; }
+.play-screen[data-world="night-maglev"] .lane-card-text { max-height: 112px; }
+.play-screen[data-world="night-maglev"] .lane-card.is-long { max-height: 188px; padding: 14px 10px 10px; }
+.play-screen[data-world="night-maglev"] .lane-card.is-long .lane-card-letter { position: absolute; top: -16px; left: 10px; width: 26px; height: 26px; font-size: 13px; }
+.play-screen[data-world="night-maglev"] .lane-card.is-long .lane-card-text { max-height: 160px; }
+.play-screen[data-world="night-maglev"] .lane-card.is-current { background: #25414cec; border-color: var(--lane-color); }
+.play-screen[data-world="night-maglev"] .lane-card.is-correct { background: #21443a; border-color: #82d6ad; }
+.play-screen[data-world="night-maglev"] .lane-card.is-wrong { background: #492a2c; border-color: #f08c7c; }
+.play-screen[data-world="night-maglev"] .lane-card.is-ghost { opacity: 1; }
+/* Ближняя опасность: убираем размытие, но сохраняем контраст и непрозрачность текста. */
+.play-screen[data-world="night-maglev"] .lane-cards.is-danger-near .lane-card {
+  background: rgb(20 39 51 / 0.88);
+  backdrop-filter: none;
+  box-shadow: none;
+  opacity: 1;
+}
+/* Ночью комбо в цветах линий: бирюза → янтарь → бирюза с янтарём. */
+.play-screen[data-world="night-maglev"] :is(.hud-combo, .combo-banner) { --combo-a: #2f8f8a; --combo-b: #367c78; --combo-glow: #55d6cc33; }
+.play-screen[data-world="night-maglev"] :is(.hud-combo, .combo-banner).is-tier-3 { --combo-a: #b98235; --combo-b: #8a5a26; --combo-glow: #e6ae6240; }
+.play-screen[data-world="night-maglev"] :is(.hud-combo, .combo-banner).is-tier-4 { --combo-a: #2fb3a8; --combo-b: #c98a2e; --combo-glow: #e6ae6255; }
+.play-screen[data-world="night-maglev"] :is(.hud-combo, .combo-banner).is-tier-5 { --combo-a: #2fb3a8; --combo-b: #e6ae62; --combo-glow: #8fe8df55; }
+.play-screen[data-world="night-maglev"] .hud-combo.is-tier-5 { background: linear-gradient(90deg, #2fb3a8, #e6ae62, #8fe8df, #c98a2e, #2fb3a8); background-size: 300% 100%; }
+.play-screen[data-world="night-maglev"] .combo-rays.is-back { background: repeating-conic-gradient(from 12deg, #e6ae6255 0deg 5deg, transparent 5deg 18deg); }
+.play-screen[data-world="night-maglev"] .combo-ring.is-late { border-color: #8fe8df; box-shadow: 0 0 18px #55d6cc, inset 0 0 12px #55d6cc; }
+.play-screen[data-world="night-maglev"] .combo-flare { background: linear-gradient(90deg, transparent, #55d6cc 25%, #ffffff 50%, #e6ae62 75%, transparent); }
+.play-screen[data-world="night-maglev"] .combo-banner.is-tier-5 .combo-banner-title { animation-name: combo-prism-night; }
+.play-screen[data-world="night-maglev"] .streak-medal-disc { --medal-a: #f3cf8e; --medal-b: #b77a2a; box-shadow: 0 0 0 5px #fff1d6, 0 0 0 9px #2f8f8a, 0 10px 30px rgb(0 0 0 / 0.45), 0 0 40px #55d6cc66; }
+.play-screen[data-world="night-maglev"] .streak-medal-flare { background: radial-gradient(ellipse 50% 50%, #8fe8df55, transparent 70%); }
+.play-screen[data-world="night-maglev"] .streak-coin { width: 10px; height: 18px; border-radius: 5px; background: linear-gradient(#fff1d6, #55d6cc 60%, #2f8f8a); box-shadow: 0 0 8px #55d6ccaa; }
+
+@keyframes combo-prism-night {
+  0% { -webkit-text-stroke-color: #55d6cc; text-shadow: -4px 0 #55d6ccaa, 4px 0 #e6ae62aa, 0 5px 0 #2f8f8a; }
+  50% { -webkit-text-stroke-color: #e6ae62; text-shadow: -2px 0 #e6ae6299, 2px 0 #55d6cc99, 0 5px 0 #2f8f8a; }
+  100% { -webkit-text-stroke-color: #55d6cc; text-shadow: 0 5px 0 #2f8f8a, 0 12px 30px #55d6cc40; }
+}
+.play-screen[data-world="night-maglev"] .combo-banner-title { text-shadow: 0 5px 0 var(--combo-b), 0 12px 30px #55d6cc40; }
+.play-screen[data-world="night-maglev"] .combo-rays { background: repeating-conic-gradient(from 0deg, #a5e5dd70 0deg 7deg, transparent 7deg 24deg); }
+.play-screen[data-world="night-maglev"] .screen-flash.is-combo-2 { box-shadow: inset 0 0 120px 30px #55d6cc55; }
+.play-screen[data-world="night-maglev"] .screen-flash.is-combo-3 { box-shadow: inset 0 0 130px 34px #e6ae6255, inset 0 0 60px 12px #55d6cc40; }
+.play-screen[data-world="night-maglev"] .screen-flash.is-combo-4 { box-shadow: inset 0 0 150px 40px #55d6cc55, inset 0 0 70px 14px #e6ae6266; }
+.play-screen[data-world="night-maglev"] .screen-flash.is-combo-5 { box-shadow: inset 0 0 170px 46px #55d6cc60, inset 0 0 80px 16px #e6ae6270; }
+.play-screen[data-world="night-maglev"] .screen-flash.is-combo-gold { box-shadow: inset 0 0 150px 40px #e6ae6270; }
+.play-screen[data-world="night-maglev"] .board-timer span { background: linear-gradient(90deg, #e6ae62, #55d6cc); background-size: 100% 100%; }
+.play-screen[data-world="night-maglev"] .move-hint { background: linear-gradient(90deg, #246165, #347c7a); box-shadow: 0 8px 24px #123b4260; }
+.play-screen[data-world="night-maglev"] .move-hint:is(.is-dodge, .is-swerve) { background: linear-gradient(90deg, #813c36, #a45142); }
+.play-screen[data-world="night-maglev"] .board-badge.is-ai { background: #405d68; color: #d2e7e9; }
+.play-screen[data-world="night-maglev"] :is(.pause-card, .results-card) { background: #12232ef5; border: 1px solid #527a864d; color: #e2ebed; color-scheme: dark; }
+.play-screen[data-world="night-maglev"] :is(.results-stats div, .results-mistakes li) { background: #1c3441; }
+.play-screen[data-world="night-maglev"] :is(.results-stats dt, .mistake-explanation, .mistake-line small) { color: #a8bdc8; }
+.play-screen[data-world="night-maglev"] .results-score { color: #a5e5dd; }
+.play-screen[data-world="night-maglev"] .mistake-line.is-correct > span:first-child { color: #82d6ad; }
+.play-screen[data-world="night-maglev"] .mistake-line.is-wrong > span:first-child { color: #f58e80; }
+.play-screen[data-reduced-motion="true"] :is(.move-hint, .lane-card, .board-prompt, .countdown, .combo-banner, .results-card, .results-stars .is-on) { animation: none; transition: none; }
+.play-screen[data-reduced-motion="true"] :is(.combo-banner, .streak-medal) { animation: banner-fade 1.05s linear forwards; }
+.play-screen[data-reduced-motion="true"] :is(.hud-combo, .hud-combo-streak, .combo-banner-word, .combo-banner-title, .streak-medal-disc, .streak-medal-bonus) { animation: none; }
+.play-screen[data-reduced-motion="true"] .combo-banner-title::after { display: none; }
+@media (max-width: 600px) { .night-speedometer { right: 12px; bottom: 54px; width: 135px; padding: 9px 11px; }.night-speedometer p { display: none; } }
+
+/* --- Телефон: свайпы вместо клавиш, узкие карточки, компактное табло --- */
+
+@media (pointer: coarse) {
+  .key-hints:not(.is-touch) {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .key-hints.is-touch {
+    display: flex;
+    bottom: 12px;
+    gap: 12px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 559px) {
+  .hud-top {
+    top: 14px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .hud-score {
+    grid-auto-flow: column;
+    align-items: center;
+  }
+
+  .hud-score-value {
+    font-size: 28px;
+  }
+
+  .board {
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 18px;
+  }
+
+  .board-head {
+    font-size: 10px;
+  }
+
+  .board-idle {
+    padding: 0 4%;
+    font-size: 15px;
+  }
+
+  .lane-card {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 56px;
+    max-height: 96px;
+    padding: 6px 4px;
+    border-radius: 14px;
+    text-align: center;
+  }
+
+  .lane-card-letter {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    font-size: 12px;
+  }
+
+  .lane-card-text {
+    flex: none;
+    width: 100%;
+    max-height: 68px;
+    font-size: 12px;
+    line-height: 1.2;
+    /* Длинное слово переносим по слогам, а не рвём посередине («Определит|ель») */
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  .mistake-toast {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    max-width: none;
+  }
+}
+
+@media (max-height: 519px) {
+  .board {
+    gap: 4px;
+    padding: 8px 16px;
+  }
+
+  .lane-card {
+    min-height: 48px;
+    max-height: 84px;
+    padding: 6px 10px 6px 6px;
+  }
+
+  .lane-card-text {
+    max-height: 64px;
+    font-size: 13px;
+  }
+
+  .mistake-toast {
+    bottom: 10px;
+    left: 12px;
+    max-width: min(360px, 45vw);
+  }
+
+  .start-hint {
+    top: auto;
+    bottom: 14px;
+  }
+}
+
+/* Ночной индикатор тяги на телефоне — педаль: верх держишь — разгон, низ — до базы. */
+.night-speedometer.is-touch {
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+
+.night-speed-zone {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  height: 50%;
+  border: 0;
+  background: transparent;
+  color: #a5e5dd;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.night-speed-zone.is-up {
+  top: 0;
+  align-items: flex-start;
+  padding-top: 6px;
+  border-radius: 12px 12px 0 0;
+}
+
+.night-speed-zone.is-down {
+  bottom: 0;
+  align-items: flex-end;
+  padding-bottom: 6px;
+  border-radius: 0 0 12px 12px;
+  color: #9ab0b9;
+}
+
+.night-speed-zone:active {
+  background: rgb(85 214 204 / 0.16);
+}
