@@ -35,13 +35,96 @@ cd study-surfers
 
 ### macOS и Linux
 
+**1. Поставьте зависимости** (один раз). Проверить, что всё на месте:
+
 ```bash
+python3 --version   # 3.12 или 3.13
+node --version      # v22 или новее
+git --version
+```
+
+Если чего-то нет:
+
+- macOS (через [Homebrew](https://brew.sh/)):
+
+  ```bash
+  brew install python@3.12 node git
+  ```
+
+- Debian / Ubuntu:
+
+  ```bash
+  sudo apt update
+  sudo apt install python3 python3-venv python3-pip git curl
+  ```
+
+  Node.js 22 в стандартных репозиториях часто старый — поставьте через [nvm](https://github.com/nvm-sh/nvm) или с [nodejs.org](https://nodejs.org/). Если `python3 --version` показывает не 3.12/3.13, установите `python3.12` и `python3.12-venv` (на Ubuntu 22.04 — из PPA deadsnakes).
+
+- Fedora:
+
+  ```bash
+  sudo dnf install python3.12 nodejs git
+  ```
+
+- Arch:
+
+  ```bash
+  sudo pacman -S python nodejs npm git
+  ```
+
+**2. Скачайте проект и запустите:**
+
+```bash
+git clone https://github.com/tneki22/study-surfers.git
+cd study-surfers
 ./start.sh
 ```
 
-Если ставите Python из пакетов Debian или Ubuntu, понадобится модуль venv: `sudo apt install python3.12-venv` (или `python3-venv`).
+Скрипт сам создаст окружение `backend/.venv`, поставит Python-зависимости (`pip`), соберёт интерфейс (`npm ci` и `npm run build`) и откроет браузер на http://127.0.0.1:8765. Первый запуск идёт несколько минут, потом — несколько секунд: зависимости и сборка обновляются только при изменениях.
 
-Чтобы остановить игру, закройте окно консоли или нажмите `Ctrl+C`.
+Если после скачивания ZIP скрипт не запускается с «Permission denied», сделайте его исполняемым: `chmod +x start.sh`.
+
+**Параметры `start.sh`:**
+
+| Команда | Что делает |
+|---|---|
+| `./start.sh` | собирает интерфейс и запускает игру на http://127.0.0.1:8765 |
+| `./start.sh --no-browser` | то же, но без автоматического открытия браузера (удобно на сервере или по SSH) |
+| `./start.sh --dev` | режим разработки с горячей перезагрузкой на http://127.0.0.1:5180 |
+
+Чтобы остановить игру, нажмите `Ctrl+C` в терминале (Windows: закройте окно консоли).
+
+<details>
+<summary>Запуск вручную, без <code>start.sh</code></summary>
+
+Из корня проекта:
+
+```bash
+# 1. Python-окружение и зависимости
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -r backend/requirements.txt
+
+# 2. Сборка интерфейса
+cd frontend
+npm ci
+npm run build
+
+# 3. Запуск сервера (раздаёт собранный интерфейс)
+cd ../backend
+PYTHONUTF8=1 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8765 --loop app.event_loop:loop_factory
+```
+
+После этого откройте http://127.0.0.1:8765.
+
+</details>
+
+**Если что-то не работает:**
+
+- `нужен Python 3.12 или 3.13` — у `python3` другая версия; поставьте нужную и запустите заново (скрипт сам найдёт `python3.12` или `python3.13`).
+- `не получилось создать окружение` — на Debian/Ubuntu не хватает `python3-venv` (см. выше).
+- `нужен Node.js 22 или новее` — обновите Node.js; проверьте, что `npm` доступен в `PATH`.
+- Порт `8765` или `5180` занят — закройте программу, которая его использует (`lsof -i :8765`), и запустите заново.
+- Сборка сломалась на полпути — удалите `frontend/dist` и `frontend/node_modules` и запустите `./start.sh` снова.
 
 ## Управление
 
